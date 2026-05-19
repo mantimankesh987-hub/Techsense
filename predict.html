@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TechSense – Addiction Test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #07071a; font-family: 'Inter', sans-serif; }
+    .gradient-text {
+      background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .glass {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(16px);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(139,92,246,0.35); }
+    .blob { position: fixed; border-radius: 50%; filter: blur(90px); opacity: 0.1; pointer-events: none; }
+
+    /* Custom radio / checkbox */
+    .opt-label {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; cursor: pointer;
+      transition: all 0.2s; user-select: none;
+    }
+    .opt-label:hover { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.07); }
+    input[type="radio"]:checked  + .opt-label,
+    input[type="checkbox"]:checked + .opt-label {
+      border-color: rgba(139,92,246,0.7);
+      background: rgba(139,92,246,0.12);
+      color: #c4b5fd;
+    }
+    input[type="radio"], input[type="checkbox"] { display: none; }
+    .custom-dot {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3); flex-shrink: 0; transition: all 0.2s;
+    }
+    input[type="radio"]:checked + .opt-label .custom-dot {
+      background: linear-gradient(135deg,#8b5cf6,#06b6d4);
+      border-color: transparent;
+    }
+    .custom-box {
+      width: 16px; height: 16px; border-radius: 4px;
+      border: 2px solid rgba(255,255,255,0.3); flex-shrink: 0; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    input[type="checkbox"]:checked + .opt-label .custom-box {
+      background: linear-gradient(135deg,#8b5cf6,#06b6d4);
+      border-color: transparent;
+    }
+    input[type="checkbox"]:checked + .opt-label .custom-box::after {
+      content: '✓'; color: white; font-size: 10px; font-weight: 900;
+    }
+    .section-card { border-left: 3px solid; border-image: linear-gradient(135deg,#8b5cf6,#06b6d4) 1; }
+    .progress-bar { height: 4px; background: rgba(255,255,255,0.07); border-radius: 99px; }
+    .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,#8b5cf6,#06b6d4); transition: width 0.4s ease; }
+    nav { border-bottom: 1px solid rgba(255,255,255,0.06); }
+  </style>
+</head>
+<body class="text-white min-h-screen">
+  <div class="blob w-96 h-96 bg-purple-600" style="top:-50px;left:-80px;z-index:0;"></div>
+  <div class="blob w-80 h-80 bg-cyan-500"   style="bottom:40px;right:-60px;z-index:0;"></div>
+
+  <!-- Nav -->
+  <nav class="relative z-10 flex items-center justify-between px-6 py-4 lg:px-16">
+    <a href="/" class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg btn-primary flex items-center justify-center text-sm font-bold">TS</div>
+      <span class="font-bold text-lg">TechSense</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <span class="text-gray-500 text-sm">👤 {{ session.username }}</span>
+      <a href="/dashboard" class="text-gray-400 hover:text-white text-sm transition">Dashboard</a>
+      <a href="/logout" class="text-gray-500 hover:text-red-400 text-sm transition">Logout</a>
+    </div>
+  </nav>
+
+  <main class="relative z-10 max-w-2xl mx-auto px-4 py-10">
+
+    <div class="text-center mb-10">
+      <span class="inline-block glass rounded-full px-4 py-1 text-xs text-purple-300 font-medium mb-4">AI Prediction Test</span>
+      <h1 class="text-3xl lg:text-4xl font-bold mb-2">Your Digital <span class="gradient-text">Habit Check</span></h1>
+      <p class="text-gray-500 text-sm">Answer all questions honestly for the most accurate result.</p>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-bar mb-8" id="progressBar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+
+    <form method="POST" action="/predict" id="predForm" onchange="updateProgress()">
+
+      <!-- Q1: Age -->
+      <div class="glass rounded-2xl p-6 mb-5 section-card">
+        <p class="font-semibold mb-4 flex items-center gap-2">
+          <span class="text-purple-400 text-sm font-bold bg-purple-400/10 px-2 py-0.5 rounded">Q1</span>
+          What is your age?
+        </p>
+        <div class="grid grid-cols-2 gap-3">
+          <label>
+            <input type="radio" name="age" value="0" required/>
+            <div class="opt-label"><span class="custom-dot"></span>Under 18</div>
+          </label>
+          <label>
+            <input type="radio" name="age" value="1"/>
+            <div class="opt-label"><span class="custom-dot"></span>18 and above</div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Q2: Screen Time -->
+      <div class="glass rounded-2xl p-6 mb-5 section-card">
+        <p class="font-semibold mb-4 flex items-center gap-2">
+          <span class="text-purple-400 text-sm font-bold bg-purple-400/10 px-2 py-0.5 rounded">Q2</span>
+          How much is your daily screen time?
+        </p>
+        <div class="grid grid-cols-2 gap-3">
+          <label><input type="radio" name="screen_time" value="1" required/><div class="opt-label"><span class="custom-dot"></span>0 – 2 hours</div></label>
+          <label><input type="radio" name="screen_time" value="2"/><div class="opt-label"><span class="custom-dot"></span>2 – 5 hours</div></label>
+          <label><input type="radio" name="screen_time" value="3"/><div class="opt-label"><span class="custom-dot"></span>5 – 7 hours</div></label>
+          <label><input type="radio" name="screen_time" value="4"/><div class="opt-label"><span class="custom-dot"></span>7+ hours</div></label>
+        </div>
+      </div>
+
+      <!-- Q3: Tech affect -->
+      <div class="glass rounded-2xl p-6 mb-5 section-card">
+        <p class="font-semibold mb-4 flex items-center gap-2">
+          <span class="text-purple-400 text-sm font-bold bg-purple-400/10 px-2 py-0.5 rounded">Q3</span>
+          Does technology affect your daily life?
+        </p>
+        <div class="grid grid-cols-2 gap-3">
+          <label><input type="radio" name="tech_affect" value="1" required/><div class="opt-label"><span class="custom-dot"></span>Yes</div></label>
+          <label><input type="radio" name="tech_affect" value="0"/><div class="opt-label"><span class="custom-dot"></span>No</div></label>
+        </div>
+      </div>
+
+      <!-- Q4: Improve -->
+      <div class="glass rounded-2xl p-6 mb-5 section-card">
+        <p class="font-semibold mb-4 flex items-center gap-2">
+          <span class="text-purple-400 text-sm font-bold bg-purple-400/10 px-2 py-0.5 rounded">Q4</span>
+          Do you want to improve your screen time?
+        </p>
+        <div class="grid grid-cols-2 gap-3">
+          <label><input type="radio" name="improve" value="1" required/><div class="opt-label"><span class="custom-dot"></span>Yes</div></label>
+          <label><input type="radio" name="improve" value="0"/><div class="opt-label"><span class="custom-dot"></span>No</div></label>
+        </div>
+      </div>
+
+      <!-- Q5: Activities -->
+      <div class="glass rounded-2xl p-6 mb-5 section-card">
+        <p class="font-semibold mb-1 flex items-center gap-2">
+          <span class="text-purple-400 text-sm font-bold bg-purple-400/10 px-2 py-0.5 rounded">Q5</span>
+          What are your tech addictions?
+        </p>
+        <p class="text-gray-500 text-xs mb-4">Select all that apply</p>
+        <div class="grid grid-cols-2 gap-3">
+          {% for act in ['Games','Social Media','Facetime','Online Shopping','Texting','Entertainment'] %}
+          <label>
+            <input type="checkbox" name="activities" value="{{ act }}"/>
+            <div class="opt-label"><span class="custom-box"></span>{{ act }}</div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Q6: Apps -->
+      <div class="glass rounded-2xl p-6 mb-8 section-card">
+        <p class="font-semibold mb-1 flex items-center gap-2">
+          <span class="text-purple-400 text-sm font-bold bg-purple-400/10 px-2 py-0.5 rounded">Q6</span>
+          Which apps/websites do you use most?
+        </p>
+        <p class="text-gray-500 text-xs mb-4">Select all that apply</p>
+        <div class="grid grid-cols-3 gap-3">
+          {% for app in ['Snapchat','Messages','Facetime','Instagram','Facebook','Tiktok','Dating Apps','YouTube','Netflix','WhatsApp','Reddit','Twitter','Amazon','Discord','Spotify'] %}
+          <label>
+            <input type="checkbox" name="apps" value="{{ app }}"/>
+            <div class="opt-label text-xs"><span class="custom-box"></span>{{ app }}</div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn"
+              class="btn-primary w-full py-4 rounded-xl font-bold text-base tracking-wide">
+        Analyze My Digital Habits →
+      </button>
+    </form>
+  </main>
+
+  <script>
+    // Auto-track progress based on answered required radio groups
+    function updateProgress(){
+      const required = ['age','screen_time','tech_affect','improve'];
+      const answered = required.filter(n => document.querySelector(`input[name="${n}"]:checked`));
+      const pct = (answered.length / required.length) * 100;
+      document.getElementById('progressFill').style.width = pct + '%';
+    }
+    document.getElementById('predForm').addEventListener('submit', function(){
+      const btn = document.getElementById('submitBtn');
+      btn.textContent = 'Analyzing... ⚡';
+      btn.disabled = true;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TechSense – Sign In / Register</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #07071a; font-family: 'Inter', sans-serif; }
+    .gradient-text {
+      background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .glass {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.09);
+      backdrop-filter: blur(20px);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(139,92,246,0.35); }
+    .blob { position: fixed; border-radius: 50%; filter: blur(90px); opacity: 0.12; pointer-events: none; }
+    .input-field {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus { border-color: rgba(139,92,246,0.6); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+    .input-field::placeholder { color: rgba(255,255,255,0.3); }
+    .tab-btn { transition: all 0.2s; }
+    .tab-btn.active { background: rgba(139,92,246,0.15); color: #a78bfa; border-bottom: 2px solid #8b5cf6; }
+    .alert-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+    .alert-error   { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.3);  color: #fca5a5; }
+    .alert-info    { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
+  </style>
+</head>
+<body class="text-white min-h-screen flex flex-col">
+
+  <!-- Blobs -->
+  <div class="blob w-96 h-96 bg-purple-600" style="top:-100px;left:-100px;z-index:0;"></div>
+  <div class="blob w-80 h-80 bg-cyan-500"   style="bottom:-80px;right:-80px;z-index:0;animation-delay:1.5s;"></div>
+
+  <!-- Nav -->
+  <nav class="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/5">
+    <a href="/" class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg btn-primary flex items-center justify-center text-sm font-bold">TS</div>
+      <span class="font-bold text-lg">TechSense</span>
+    </a>
+  </nav>
+
+  <!-- Auth card -->
+  <main class="relative z-10 flex-1 flex items-center justify-center px-4 py-16">
+    <div class="w-full max-w-md">
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for cat, msg in messages %}
+            <div class="alert-{{ cat }} rounded-xl px-4 py-3 mb-4 text-sm font-medium">{{ msg }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="glass rounded-2xl p-8" style="box-shadow:0 0 60px rgba(139,92,246,0.1);">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+          <h1 class="text-2xl font-bold mb-1">Welcome to <span class="gradient-text">TechSense</span></h1>
+          <p class="text-gray-500 text-sm">Sign in or create your account</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-white/10 mb-7">
+          <button id="tab-login"    onclick="showTab('login')"    class="tab-btn active flex-1 py-2.5 text-sm font-semibold text-gray-400">Sign In</button>
+          <button id="tab-register" onclick="showTab('register')" class="tab-btn        flex-1 py-2.5 text-sm font-semibold text-gray-400">Register</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="form-login" method="POST" action="/auth" class="space-y-4">
+          <input type="hidden" name="action" value="login"/>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Username</label>
+            <input id="login-username" type="text" name="username" placeholder="your_username"
+                   class="input-field w-full rounded-lg px-4 py-3 text-sm" required/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Password</label>
+            <input id="login-password" type="password" name="password" placeholder="••••••••"
+                   class="input-field w-full rounded-lg px-4 py-3 text-sm" required/>
+          </div>
+          <button type="submit" class="btn-primary w-full py-3 rounded-lg font-semibold text-sm mt-2">
+            Sign In →
+          </button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="form-register" method="POST" action="/auth" class="space-y-4 hidden">
+          <input type="hidden" name="action" value="register"/>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Choose Username</label>
+            <input id="reg-username" type="text" name="username" placeholder="cool_username"
+                   class="input-field w-full rounded-lg px-4 py-3 text-sm" required/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">Create Password</label>
+            <input id="reg-password" type="password" name="password" placeholder="min. 6 characters"
+                   class="input-field w-full rounded-lg px-4 py-3 text-sm" required minlength="6"/>
+          </div>
+          <button type="submit" class="btn-primary w-full py-3 rounded-lg font-semibold text-sm mt-2">
+            Create Account →
+          </button>
+        </form>
+
+        <p class="text-center text-gray-600 text-xs mt-6">
+          By continuing you agree to our Terms of Use &amp; Privacy Policy.
+        </p>
+      </div><!-- /glass card -->
+    </div>
+  </main>
+
+  <script>
+    function showTab(tab) {
+      const loginForm    = document.getElementById('form-login');
+      const registerForm = document.getElementById('form-register');
+      const tabLogin     = document.getElementById('tab-login');
+      const tabRegister  = document.getElementById('tab-register');
+      if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+      } else {
+        registerForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+        tabRegister.classList.add('active');
+        tabLogin.classList.remove('active');
+      }
+    }
+    // Auto-show register tab if there was a registration flash
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for cat, msg in messages %}
+          {% if 'create' in msg.lower() or 'taken' in msg.lower() %}
+            // showTab('register'); // Uncomment if preferred
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </script>
+
+</body>
+</html>

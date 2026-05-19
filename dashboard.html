@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechSense – Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #07071a;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+      transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35);
+    }
+
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.08;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    nav {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Stat cards */
+    .stat-card {
+      transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+    }
+
+    /* Table */
+    .pred-table th {
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 12px 16px;
+    }
+
+    .pred-table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+
+    .pred-table tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background 0.2s;
+    }
+
+    .pred-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .pred-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .badge-addicted {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    .badge-safe {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #86efac;
+    }
+
+    /* Progress ring placeholder */
+    .ring-wrap {
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+
+    .ring-wrap svg {
+      transform: rotate(-90deg);
+    }
+
+    /* Search filter */
+    .sf-input {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: white;
+      outline: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    .sf-input:focus {
+      border-color: rgba(139, 92, 246, 0.5);
+    }
+
+    .sf-input::placeholder {
+      color: rgba(255, 255, 255, 0.25);
+    }
+  </style>
+</head>
+
+<body class="text-white min-h-screen">
+  <div class="blob w-96 h-96 bg-purple-600" style="top:-60px;left:-80px;"></div>
+  <div class="blob w-80 h-80 bg-cyan-500" style="bottom:40px;right:-60px;"></div>
+
+  <!-- Sidebar + content layout -->
+  <div class="min-h-screen flex flex-col">
+
+    <!-- Nav -->
+    <nav class="relative z-20 flex items-center justify-between px-6 py-4 lg:px-10">
+      <a href="/" class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg btn-primary flex items-center justify-center text-sm font-bold">TS</div>
+        <span class="font-bold text-lg">TechSense</span>
+      </a>
+      <div class="flex items-center gap-4">
+        <span class="text-gray-500 text-sm">👤 {{ session.username }}</span>
+        <a href="/predict" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold">+ New Test</a>
+        <a href="/logout" class="text-gray-500 hover:text-red-400 text-sm transition">Logout</a>
+      </div>
+    </nav>
+
+    <main class="relative z-10 flex-1 px-6 lg:px-10 py-8 max-w-7xl mx-auto w-full">
+
+      <!-- Page header -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold mb-1">Your <span class="gradient-text">Dashboard</span></h1>
+        <p class="text-gray-500 text-sm">All your prediction history and insights in one place.</p>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+        <div class="glass rounded-2xl p-5 stat-card">
+          <p class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Total Tests</p>
+          <p class="text-4xl font-black gradient-text">{{ total }}</p>
+          <p class="text-gray-600 text-xs mt-1">all time</p>
+        </div>
+
+        <div class="glass rounded-2xl p-5 stat-card" style="border-color:rgba(239,68,68,0.2);">
+          <p class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Addicted</p>
+          <p class="text-4xl font-black text-red-400">{{ addicted }}</p>
+          <p class="text-gray-600 text-xs mt-1">
+            {% if total > 0 %}{{ ((addicted/total)*100)|round(0)|int }}%{% else %}0%{% endif %} of tests
+          </p>
+        </div>
+
+        <div class="glass rounded-2xl p-5 stat-card" style="border-color:rgba(34,197,94,0.2);">
+          <p class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Not Addicted</p>
+          <p class="text-4xl font-black text-green-400">{{ not_addicted }}</p>
+          <p class="text-gray-600 text-xs mt-1">
+            {% if total > 0 %}{{ ((not_addicted/total)*100)|round(0)|int }}%{% else %}0%{% endif %} of tests
+          </p>
+        </div>
+
+        <div class="glass rounded-2xl p-5 stat-card">
+          <p class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Latest Result</p>
+          {% if predictions %}
+          {% if predictions[0]['result'] == 1 %}
+          <p class="text-2xl font-black text-red-300">Addicted 😰</p>
+          {% else %}
+          <p class="text-2xl font-black text-green-300">Safe 🌟</p>
+          {% endif %}
+          <p class="text-gray-600 text-xs mt-1">most recent</p>
+          {% else %}
+          <p class="text-gray-600 text-xl font-bold">—</p>
+          <p class="text-gray-700 text-xs mt-1">no tests yet</p>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <!-- Table section -->
+      <div class="glass rounded-2xl overflow-hidden">
+
+        <!-- Table header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+          <h2 class="font-semibold text-sm">Prediction History</h2>
+          <div class="flex items-center gap-3">
+            <input id="searchInput" type="text" placeholder="Search results…" class="sf-input" oninput="filterTable()"
+              style="width:180px;" />
+            {% if total > 0 %}
+            <span class="text-gray-600 text-xs">{{ total }} record{{ 's' if total != 1 else '' }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if predictions %}
+        <div class="overflow-x-auto">
+          <table class="pred-table w-full" id="predTable">
+            <thead>
+              <tr class="border-b border-white/5">
+                <th class="text-left">#</th>
+                <th class="text-left">Result</th>
+                <th class="text-left">Age</th>
+                <th class="text-left">Screen Time</th>
+                <th class="text-left">Tech Affects</th>
+                <th class="text-left">Improve</th>
+                <th class="text-left">Activities</th>
+                <th class="text-left">Apps Used</th>
+                <th class="text-left">Date & Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in predictions %}
+              <tr>
+                <td class="text-gray-600 font-mono">{{ loop.index }}</td>
+                <td>
+                  {% if p.result == 1 %}
+                  <span class="badge-addicted">Addicted</span>
+                  {% else %}
+                  <span class="badge-safe">Not Addicted</span>
+                  {% endif %}
+                </td>
+                <td class="text-gray-300">{{ p.age_label or '—' }}</td>
+                <td class="text-gray-300">{{ p.screen_time or '—' }}</td>
+                <td class="text-gray-300">{{ p.tech_affect or '—' }}</td>
+                <td class="text-gray-300">{{ p.improve or '—' }}</td>
+                <td class="text-gray-400 max-w-xs truncate" style="max-width:160px;" title="{{ p.activities }}">
+                  {{ p.activities or '—' }}
+                </td>
+                <td class="text-gray-400 max-w-xs truncate" style="max-width:160px;" title="{{ p.apps }}">
+                  {{ p.apps or '—' }}
+                </td>
+                <td class="text-gray-600 whitespace-nowrap text-xs font-mono">
+                  {{ p.created_at[:16].replace('T',' ') if p.created_at else '—' }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% else %}
+        <!-- Empty state -->
+        <div class="py-20 text-center">
+          <p class="text-5xl mb-4">🧪</p>
+          <p class="text-gray-400 font-semibold mb-2">No predictions yet</p>
+          <p class="text-gray-600 text-sm mb-6">Take your first tech addiction test to see results here.</p>
+          <a href="/predict" class="btn-primary px-6 py-3 rounded-xl text-sm font-semibold inline-block">
+            Start First Test →
+          </a>
+        </div>
+        {% endif %}
+
+      </div><!-- /glass table card -->
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 px-10 py-5 border-t border-white/5 text-center text-gray-700 text-xs">
+      © 2026 TechSense — AI Technology Addiction Predictor
+    </footer>
+
+  </div><!-- /layout -->
+
+  <script>
+    function filterTable() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const rows = document.querySelectorAll('#predTable tbody tr');
+      rows.forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+  </script>
+</body>
+
+</html>
